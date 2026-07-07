@@ -18,7 +18,8 @@ export function proxy(request: NextRequest) {
   );
   const isApiRoute = pathname.startsWith("/api/");
   const isPublicApi = pathname.startsWith("/api/auth/login") ||
-    pathname.startsWith("/api/auth/register");
+    pathname.startsWith("/api/auth/register") ||
+    pathname === "/api/health";
 
   const stored = request.cookies.get(authCookie);
   const isAuthenticated = stored?.value
