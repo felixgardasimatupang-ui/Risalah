@@ -1,4 +1,4 @@
-const CACHE_NAME = "risalah-v1";
+const CACHE_NAME = "risalah-v2";
 const STATIC_ASSETS = [
   "/",
   "/login",
@@ -10,10 +10,10 @@ const STATIC_ASSETS = [
 const API_CACHE = "risalah-api-v1";
 
 self.addEventListener("install", (event) => {
+  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_ASSETS))
   );
-  self.skipWaiting();
 });
 
 self.addEventListener("activate", (event) => {
