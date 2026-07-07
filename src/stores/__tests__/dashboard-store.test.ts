@@ -19,17 +19,17 @@ describe("DashboardStore", () => {
 
   it("should reorder widgets", () => {
     const widgets: WidgetConfig[] = [
-      { id: "a", title: "A", description: "", visible: true, order: 0, size: "full" },
-      { id: "b", title: "B", description: "", visible: true, order: 1, size: "full" },
-      { id: "c", title: "C", description: "", visible: true, order: 2, size: "full" },
+      { id: "stat-cards", title: "A", description: "", visible: true, order: 0, size: "full" },
+      { id: "meeting-trend", title: "B", description: "", visible: true, order: 1, size: "full" },
+      { id: "participant-bars", title: "C", description: "", visible: true, order: 2, size: "full" },
     ];
     useDashboardStore.setState({ widgets });
 
     useDashboardStore.getState().reorderWidgets(0, 2);
     const result = useDashboardStore.getState().widgets;
-    expect(result[0].id).toBe("b");
-    expect(result[1].id).toBe("c");
-    expect(result[2].id).toBe("a");
+    expect(result[0].id).toBe("meeting-trend");
+    expect(result[1].id).toBe("participant-bars");
+    expect(result[2].id).toBe("stat-cards");
   });
 
   it("should reset to default widgets", () => {
