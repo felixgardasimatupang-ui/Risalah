@@ -1,5 +1,12 @@
 const CACHE_NAME = "risalah-v1";
-const STATIC_ASSETS = ["/", "/offline", "/manifest.json", "/icons/icon.svg"];
+const STATIC_ASSETS = [
+  "/",
+  "/login",
+  "/register",
+  "/offline",
+  "/manifest.json",
+  "/icons/icon.svg",
+];
 const API_CACHE = "risalah-api-v1";
 
 self.addEventListener("install", (event) => {
@@ -60,7 +67,7 @@ self.addEventListener("fetch", (event) => {
   event.respondWith(
     fetch(request)
       .then((response) => {
-        if (response.ok && url.pathname === "/") {
+        if (response.ok) {
           const clone = response.clone();
           caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
         }
