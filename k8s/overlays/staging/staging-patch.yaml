@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: risalah-app
+spec:
+  replicas: 1
+  template:
+    spec:
+      containers:
+        - name: app
+          env:
+            - name: NODE_ENV
+              value: staging
+            - name: LOG_LEVEL
+              value: debug
+          resources:
+            requests:
+              cpu: "0.5"
+              memory: "512Mi"
+            limits:
+              cpu: "1"
+              memory: "2Gi"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: risalah-ai
+  namespace: risalah-ai
+spec:
+  replicas: 1
+  template:
+    spec:
+      containers:
+        - name: ai
+          env:
+            - name: RISALAH_USE_GPU
+              value: "false"
+            - name: RISALAH_LOG_LEVEL
+              value: debug
+          resources:
+            requests:
+              cpu: "1"
+              memory: "2Gi"
+            limits:
+              cpu: "2"
+              memory: "4Gi"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: risalah-config
+data:
+  APP_URL: "https://staging.risalah.sekneg.go.id"
+  AI_MODEL_SIZE: "tiny"
+  WHISPER_MODEL: "tiny"
+  CORS_ORIGINS: "https://staging.risalah.sekneg.go.id"

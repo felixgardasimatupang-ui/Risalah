@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: risalah-redis
+  namespace: risalah-data
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: risalah-redis
+  template:
+    metadata:
+      labels:
+        app: risalah-redis
+    spec:
+      containers:
+        - name: redis
+          image: redis:7-alpine
+          ports:
+            - containerPort: 6379
+          args: ["--appendonly", "yes", "--maxmemory", "8gb", "--maxmemory-policy", "allkeys-lru"]
+          volumeMounts:
+            - name: redis-data
+              mountPath: /data
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "2Gi"
+            limits:
+              cpu: "2"
+              memory: "8Gi"
+      volumes:
+        - name: redis-data
+          persistentVolumeClaim:
+            claimName: risalah-redis-pvc
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: risalah-redis-pvc
+  namespace: risalah-data
+spec:
+  accessModes: [ReadWriteOnce]
+  resources:
+    requests:
+      storage: 50Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: risalah-redis
+  namespace: risalah-data
+spec:
+  selector:
+    app: risalah-redis
+  ports:
+    - port: 6379
+      targetPort: 6379
+  type: ClusterIP

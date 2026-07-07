@@ -1,0 +1,26 @@
+{
+  "name": "Notula Rapat Pemerintah",
+  "description": "Format notula rapat instansi pemerintah daerah",
+  "sections": {
+    "header": {
+      "title": "KOP NOTULA",
+      "content": "NOTULA RAPAT\n{{title}}\n\nHari/Tanggal: {{date}}\nTempat: {{location}}\n"
+    },
+    "participants": {
+      "title": "PESERTA",
+      "content": "{{participants}}\n"
+    },
+    "jalannya_rapat": {
+      "title": "JALANNYA RAPAT",
+      "content": "{{transcript}}\n"
+    },
+    "kesimpulan": {
+      "title": "KESIMPULAN",
+      "content": "{{decisions}}\n"
+    },
+    "tindak_lanjut": {
+      "title": "TINDAK LANJUT",
+      "content": "{{action_items}}\n"
+    }
+  }
+}

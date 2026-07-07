@@ -1,0 +1,35 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "9router/free-developer",
+  "agent": {
+    "general": {
+      "description": "General assistant",
+      "model": "9router/free-developer",
+      "mode": "primary"
+    },
+    "plan": {
+      "description": "Planning and reasoning",
+      "model": "9router/free-developer",
+      "mode": "subagent"
+    },
+    "build": {
+      "description": "Coding and building",
+      "model": "9router/free-developer",
+      "mode": "subagent"
+    },
+    "explore": {
+      "description": "Codebase exploration",
+      "model": "9router/groq-llama",
+      "mode": "subagent"
+    }
+  },
+  "provider": {
+    "9router": {
+      "npm": "@ai-sdk/openai-compatible",
+      "options": {
+        "baseURL": "http://localhost:20128/v1",
+        "apiKey": "L1WDDu1t6mx6MhEO857c22C81f184d39B0E5Cf8d548417F9"
+      }
+    }
+  }
+}

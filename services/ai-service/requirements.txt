@@ -1,0 +1,40 @@
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+pydantic==2.10.4
+pydantic-settings==2.7.1
+python-multipart==0.0.19
+httpx==0.28.1
+
+# Speech Recognition
+openai-whisper==20240930
+faster-whisper==1.1.1
+soundfile>=0.12.1
+numpy<2.0.0
+
+# Diarization
+pyannote-audio==3.3.2
+torch>=2.5.0
+torchaudio>=2.5.0
+
+# NLP
+spacy>=3.8.4
+spacy-langdetect>=0.1.2
+sastrawi>=1.2.0
+better-profanity>=0.7.1
+num2words>=0.5.14
+
+# RAG / AI Chat
+langchain>=0.3.14
+langchain-community>=0.3.14
+langchain-core>=0.3.29
+chromadb>=0.6.3
+sentence-transformers>=3.3.1
+
+# Queue / Background Tasks
+celery>=5.4.0
+redis>=5.2.1
+
+# Utils
+python-dateutil>=2.9.0
+python-dotenv>=1.0.1
+aiofiles>=24.1.0

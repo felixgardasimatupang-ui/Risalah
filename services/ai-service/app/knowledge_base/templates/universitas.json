@@ -1,0 +1,26 @@
+{
+  "name": "Notula Rapat Universitas",
+  "description": "Format notula rapat lingkungan perguruan tinggi",
+  "sections": {
+    "header": {
+      "title": "KOP",
+      "content": "NOTULA RAPAT\n{{title}}\n{{date}}\nLokasi: {{location}}\n"
+    },
+    "peserta": {
+      "title": "PESERTA",
+      "content": "{{participants}}\n"
+    },
+    "acara": {
+      "title": "ACARA",
+      "content": "{{transcript}}\n"
+    },
+    "keputusan": {
+      "title": "KEPUTUSAN",
+      "content": "{{decisions}}\n"
+    },
+    "tugas": {
+      "title": "TUGAS DAN TANGGUNG JAWAB",
+      "content": "{{action_items}}\n"
+    }
+  }
+}

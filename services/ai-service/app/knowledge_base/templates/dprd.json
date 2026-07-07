@@ -1,0 +1,34 @@
+{
+  "name": "Notula Rapat DPRD",
+  "description": "Format notula rapat Dewan Perwakilan Rakyat Daerah",
+  "sections": {
+    "header": {
+      "title": "KOP NOTULA",
+      "content": "NOTULA RAPAT\n{{title}}\n\nHari/Tanggal: {{date}}\nTempat: {{location}}\n"
+    },
+    "participants": {
+      "title": "PESERTA RAPAT",
+      "content": "{{participants}}\n"
+    },
+    "agenda": {
+      "title": "AGENDA",
+      "content": "1. Pembukaan\n2. Pembahasan\n3. Kesimpulan\n4. Penutup\n"
+    },
+    "pembahasan": {
+      "title": "PEMBAHASAN",
+      "content": "{{transcript}}\n"
+    },
+    "keputusan": {
+      "title": "KEPUTUSAN",
+      "content": "{{decisions}}\n"
+    },
+    "tindak_lanjut": {
+      "title": "TINDAK LANJUT",
+      "content": "{{action_items}}\n"
+    },
+    "penutup": {
+      "title": "PENUTUP",
+      "content": "Rapat ditutup pada pukul {{time_end}}.\n\nNotulensi ini telah dibuat dan disahkan."
+    }
+  }
+}

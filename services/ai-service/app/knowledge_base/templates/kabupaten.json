@@ -1,0 +1,22 @@
+{
+  "name": "Notula Rapat Kabupaten/Kota",
+  "description": "Format notula rapat tingkat kabupaten/kota",
+  "sections": {
+    "header": {
+      "title": "KOP",
+      "content": "PEMERINTAH KABUPATEN {{kabupaten}}\nNOTULA RAPAT\n{{title}}\n{{date}}\n"
+    },
+    "peserta": {
+      "title": "PESERTA",
+      "content": "{{participants}}\n"
+    },
+    "materi": {
+      "title": "MATERI RAPAT",
+      "content": "{{transcript}}\n"
+    },
+    "hasil": {
+      "title": "HASIL RAPAT",
+      "content": "{{decisions}}\n"
+    }
+  }
+}

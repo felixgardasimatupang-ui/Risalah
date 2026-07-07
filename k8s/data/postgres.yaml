@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: risalah-postgres
+  namespace: risalah-data
+spec:
+  serviceName: risalah-postgres
+  replicas: 1
+  selector:
+    matchLabels:
+      app: risalah-postgres
+  template:
+    metadata:
+      labels:
+        app: risalah-postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16-alpine
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_USER
+              value: risalah
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: risalah-secrets
+                  key: postgres-password
+            - name: POSTGRES_DB
+              value: risalah
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+          volumeMounts:
+            - name: postgres-data
+              mountPath: /var/lib/postgresql/data
+          resources:
+            requests:
+              cpu: "1"
+              memory: "4Gi"
+            limits:
+              cpu: "4"
+              memory: "16Gi"
+  volumeClaimTemplates:
+    - metadata:
+        name: postgres-data
+      spec:
+        accessModes: [ReadWriteOnce]
+        resources:
+          requests:
+            storage: 500Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: risalah-postgres
+  namespace: risalah-data
+spec:
+  selector:
+    app: risalah-postgres
+  ports:
+    - port: 5432
+      targetPort: 5432
+  clusterIP: None

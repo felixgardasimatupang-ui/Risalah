@@ -1,0 +1,29 @@
+FROM nvidia/cuda:12.4.1-runtime-ubuntu22.04
+
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3.12 python3.12-venv python3-pip \
+    ffmpeg libsndfile1 build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+ENV VIRTUAL_ENV=/opt/venv
+RUN python3.12 -m venv $VIRTUAL_ENV
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt && \
+    pip install --no-cache-dir torch torchaudio --index-url https://download.pytorch.org/whl/cu124
+
+RUN python -m spacy download id_core_news_sm || true
+
+COPY . .
+RUN mkdir -p /data/audio /data/transcripts /data/exports /data/vector_db
+
+ENV RISALAH_WHISPER_DEVICE=cuda
+ENV RISALAH_USE_GPU=true
+ENV RISALAH_DIARIZATION_DEVICE=cuda
+
+EXPOSE 8000
+
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "2"]

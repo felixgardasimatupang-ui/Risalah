@@ -1,0 +1,127 @@
+{
+  "OPD": {
+    "full": "Organisasi Perangkat Daerah",
+    "type": "struktur_pemerintahan",
+    "description": "Organisasi yang melaksanakan fungsi pemerintahan daerah"
+  },
+  "DPRD": {
+    "full": "Dewan Perwakilan Rakyat Daerah",
+    "type": "lembaga_negara",
+    "description": "Lembaga legislatif tingkat provinsi/kabupaten/kota"
+  },
+  "APBD": {
+    "full": "Anggaran Pendapatan dan Belanja Daerah",
+    "type": "anggaran",
+    "description": "Rencana keuangan tahunan pemerintah daerah"
+  },
+  "APBN": {
+    "full": "Anggaran Pendapatan dan Belanja Negara",
+    "type": "anggaran",
+    "description": "Rencana keuangan tahunan pemerintah pusat"
+  },
+  "Banggar": {
+    "full": "Badan Anggaran",
+    "type": "struktur_pemerintahan",
+    "description": "Badan kelengkapan DPRD yang membidangi anggaran"
+  },
+  "Bapemperda": {
+    "full": "Badan Pembentukan Peraturan Daerah",
+    "type": "struktur_pemerintahan",
+    "description": "Badan kelengkapan DPRD yang membidangi pembentukan Perda"
+  },
+  "Bappeda": {
+    "full": "Badan Perencanaan Pembangunan Daerah",
+    "type": "struktur_pemerintahan",
+    "description": "Lembaga teknis daerah yang bertugas merencanakan pembangunan daerah"
+  },
+  "Komisi": {
+    "full": "Komisi di DPRD",
+    "type": "struktur_pemerintahan",
+    "description": "Alat kelengkapan DPRD yang membidangi urusan tertentu"
+  },
+  "Permendagri": {
+    "full": "Peraturan Menteri Dalam Negeri",
+    "type": "regulasi",
+    "description": "Peraturan yang ditetapkan oleh Menteri Dalam Negeri"
+  },
+  "Perpres": {
+    "full": "Peraturan Presiden",
+    "type": "regulasi",
+    "description": "Peraturan yang ditetapkan oleh Presiden"
+  },
+  "PP": {
+    "full": "Peraturan Pemerintah",
+    "type": "regulasi",
+    "description": "Peraturan yang ditetapkan oleh Pemerintah"
+  },
+  "UU": {
+    "full": "Undang-Undang",
+    "type": "regulasi",
+    "description": "Peraturan perundang-undangan yang ditetapkan oleh DPR"
+  },
+  "Perda": {
+    "full": "Peraturan Daerah",
+    "type": "regulasi",
+    "description": "Peraturan yang ditetapkan oleh DPRD"
+  },
+  "PAD": {
+    "full": "Pendapatan Asli Daerah",
+    "type": "anggaran",
+    "description": "Pendapatan daerah yang berasal dari potensi daerah sendiri"
+  },
+  "DAU": {
+    "full": "Dana Alokasi Umum",
+    "type": "anggaran",
+    "description": "Dana transfer dari APBN ke daerah untuk pemerataan"
+  },
+  "DAK": {
+    "full": "Dana Alokasi Khusus",
+    "type": "anggaran",
+    "description": "Dana transfer dari APBN ke daerah untuk program khusus"
+  },
+  "Sekda": {
+    "full": "Sekretaris Daerah",
+    "type": "jabatan",
+    "description": "Pejabat tinggi yang memimpin Sekretariat Daerah"
+  },
+  "KUA": {
+    "full": "Kebijakan Umum Anggaran",
+    "type": "anggaran",
+    "description": "Dokumen kebijakan anggaran yang menjadi pedoman penyusunan APBD"
+  },
+  "PPAS": {
+    "full": "Prioritas dan Plafon Anggaran Sementara",
+    "type": "anggaran",
+    "description": "Dokumen yang memuat prioritas dan plafon anggaran sementara"
+  },
+  "RKA": {
+    "full": "Rencana Kerja dan Anggaran",
+    "type": "anggaran",
+    "description": "Dokumen perencanaan anggaran OPD"
+  },
+  "RKPD": {
+    "full": "Rencana Kerja Pembangunan Daerah",
+    "type": "perencanaan",
+    "description": "Dokumen perencanaan pembangunan tahunan daerah"
+  },
+  "RPJMD": {
+    "full": "Rencana Pembangunan Jangka Menengah Daerah",
+    "type": "perencanaan",
+    "description": "Dokumen perencanaan pembangunan daerah 5 tahunan"
+  },
+  "Musrenbang": {
+    "full": "Musyawarah Perencanaan Pembangunan",
+    "type": "perencanaan",
+    "description": "Forum musyawarah perencanaan pembangunan"
+  },
+  "SILPA": {
+    "full": "Sisa Lebih Perhitungan Anggaran",
+    "type": "anggaran",
+    "description": "Sisa dana anggaran yang tidak terpakai"
+  },
+  "DPA": {
+    "full": "Dokumen Pelaksanaan Anggaran",
+    "type": "anggaran",
+    "description": "Dokumen pelaksanaan anggaran OPD"
+  }
+}

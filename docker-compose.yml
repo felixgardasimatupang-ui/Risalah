@@ -1,0 +1,124 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: risalah-app
+    container_name: risalah-app
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=postgres://risalah:risalah-sekneg@postgres:5432/risalah
+      - JWT_SECRET=dev-secret-change-in-production
+      - AI_SERVICE_URL=http://ai-service:8000
+      - REDIS_URL=redis://redis:6379
+      - MINIO_ENDPOINT=minio:9000
+      - MINIO_ACCESS_KEY=risalah
+      - MINIO_SECRET_KEY=risalah-sekneg-minio
+      - NODE_ENV=development
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      ai-service:
+        condition: service_started
+    restart: unless-stopped
+
+  ai-service:
+    build:
+      context: ./services/ai-service
+      dockerfile: Dockerfile
+    image: risalah-ai-service
+    container_name: risalah-ai
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./services/ai-service:/app
+      - ai_data:/data
+    environment:
+      - RISALAH_WHISPER_DEVICE=cpu
+      - RISALAH_USE_GPU=false
+      - RISALAH_CELERY_BROKER_URL=redis://redis:6379/0
+      - RISALAH_CELERY_RESULT_BACKEND=redis://redis:6379/1
+    depends_on:
+      redis:
+        condition: service_started
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 8G
+        reservations:
+          memory: 4G
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: risalah-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=risalah
+      - POSTGRES_PASSWORD=risalah-sekneg
+      - POSTGRES_DB=risalah
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U risalah"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: risalah-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    command: redis-server --appendonly yes --maxmemory 2gb
+
+  minio:
+    image: minio/minio:latest
+    container_name: risalah-minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      - MINIO_ROOT_USER=risalah
+      - MINIO_ROOT_PASSWORD=risalah-sekneg-minio
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+    restart: unless-stopped
+
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter:latest
+    container_name: risalah-pg-exporter
+    ports:
+      - "9187:9187"
+    environment:
+      - DATA_SOURCE_NAME=postgres://risalah:risalah-sekneg@postgres:5432/risalah?sslmode=disable
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  redis-exporter:
+    image: oliver006/redis_exporter:latest
+    container_name: risalah-redis-exporter
+    ports:
+      - "9121:9121"
+    environment:
+      - REDIS_ADDR=redis://redis:6379
+    depends_on:
+      - redis
+    restart: unless-stopped
+
+volumes:
+  ai_data:
+  postgres_data:
+  redis_data:
+  minio_data:

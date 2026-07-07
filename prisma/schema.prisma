@@ -1,0 +1,350 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum MeetingStatus {
+  scheduled
+  in_progress
+  completed
+  cancelled
+}
+
+enum TranscriptStatus {
+  processing
+  completed
+  failed
+}
+
+enum SummaryStatus {
+  processing
+  completed
+  failed
+}
+
+enum MemberRole {
+  admin
+  member
+  viewer
+}
+
+enum ActionItemStatus {
+  pending
+  in_progress
+  completed
+  cancelled
+}
+
+enum AttendanceStatus {
+  present
+  late
+  excused
+  absent
+}
+
+enum MinutesStatus {
+  draft
+  review
+  approved
+  archived
+}
+
+model Organization {
+  id        String   @id @default(uuid())
+  name      String
+  slug      String   @unique
+  type      String  @default("other")
+  logoUrl   String?
+  address   String?
+  phone     String?
+  email     String?
+  settings  Json     @default("{}")
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  members   OrganizationMember[]
+  meetings  Meeting[]
+  chatSessions ChatSession[]
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String
+  fullName     String
+  nip          String?
+  position     String?
+  phone        String?
+  avatarUrl    String?
+  isActive     Boolean  @default(true)
+  lastLoginAt  DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  memberships        OrganizationMember[]
+  organizedMeetings  Meeting[]            @relation("Organizer")
+  participantRecords Participant[]
+  actionItems        ActionItem[]
+  chatSessions       ChatSession[]
+  approvedMinutes    Minutes[]
+  exportLogs         ExportLog[]
+}
+
+model OrganizationMember {
+  id             String     @id @default(uuid())
+  organizationId String
+  userId         String
+  role           MemberRole @default(member)
+  joinedAt       DateTime   @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, userId])
+}
+
+model Meeting {
+  id              String        @id @default(uuid())
+  organizationId  String
+  title           String
+  description     String?
+  date            DateTime
+  status          MeetingStatus @default(scheduled)
+  durationMinutes Int           @default(0)
+  location        String?
+  meetingType     String?
+  organizerId     String?
+  tags            String[]
+  metadata        Json          @default("{}")
+  isDeleted       Boolean       @default(false)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organizer    User?        @relation("Organizer", fields: [organizerId], references: [id])
+
+  participants  Participant[]
+  audioFiles    AudioFile[]
+  transcript    Transcript?
+  summary       Summary?
+  minutes       Minutes?
+  chatSessions  ChatSession[]
+  exportLogs    ExportLog[]
+
+  @@index([organizationId, date(sort: Desc)])
+  @@index([status])
+}
+
+model Participant {
+  id         String           @id @default(uuid())
+  meetingId  String
+  userId     String?
+  name       String
+  role       String?
+  isExternal Boolean          @default(false)
+  attendance AttendanceStatus @default(present)
+  joinedAt   DateTime?
+  leftAt     DateTime?
+
+  meeting     Meeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  user        User?   @relation(fields: [userId], references: [id])
+
+  transcriptLines TranscriptLine[]
+
+  @@unique([meetingId, userId])
+}
+
+model AudioFile {
+  id              String   @id @default(uuid())
+  meetingId       String
+  filename        String
+  fileSize        BigInt
+  durationSeconds Int?
+  format          String
+  storagePath     String
+  status          String   @default("uploading")
+  errorMessage    String?
+  createdAt       DateTime @default(now())
+
+  meeting Meeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+}
+
+model Transcript {
+  id              String           @id @default(uuid())
+  meetingId       String           @unique
+  status          TranscriptStatus @default(processing)
+  totalLines      Int              @default(0)
+  totalDurationMs BigInt           @default(0)
+  confidenceAvg   Float            @default(0)
+  language        String           @default("id")
+  errorMessage    String?
+  processedAt     DateTime?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  meeting Meeting          @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  lines   TranscriptLine[]
+}
+
+model TranscriptLine {
+  id             String   @id @default(uuid())
+  transcriptId   String
+  speakerName    String
+  speakerId      String?
+  text           String
+  timestampMs    BigInt
+  endTimestampMs BigInt?
+  confidence     Float    @default(0)
+  isEdited       Boolean  @default(false)
+  editedText     String?
+  createdAt      DateTime @default(now())
+
+  transcript Transcript @relation(fields: [transcriptId], references: [id], onDelete: Cascade)
+  speaker    Participant? @relation(fields: [speakerId], references: [id])
+
+  @@index([transcriptId, timestampMs])
+}
+
+model Summary {
+  id           String        @id @default(uuid())
+  meetingId    String        @unique
+  status       SummaryStatus @default(processing)
+  modelUsed    String?
+  errorMessage String?
+  processedAt  DateTime?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  meeting     Meeting      @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  keyPoints   KeyPoint[]
+  actionItems ActionItem[]
+  decisions   Decision[]
+}
+
+model KeyPoint {
+  id             String  @id @default(uuid())
+  summaryId      String
+  description    String
+  category       String?
+  relevanceScore Float   @default(0)
+  sortOrder      Int     @default(0)
+
+  summary Summary @relation(fields: [summaryId], references: [id], onDelete: Cascade)
+}
+
+model ActionItem {
+  id          String           @id @default(uuid())
+  summaryId   String
+  description String
+  assigneeId  String?
+  dueDate     DateTime?
+  status      ActionItemStatus @default(pending)
+  priority    String           @default("medium")
+  completedAt DateTime?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  summary  Summary @relation(fields: [summaryId], references: [id], onDelete: Cascade)
+  assignee User?   @relation(fields: [assigneeId], references: [id])
+
+  @@index([assigneeId, status])
+}
+
+model Decision {
+  id            String  @id @default(uuid())
+  summaryId     String
+  description   String
+  decisionDate  DateTime?
+  category      String?
+  isApproved    Boolean @default(false)
+  createdAt     DateTime @default(now())
+
+  summary Summary @relation(fields: [summaryId], references: [id], onDelete: Cascade)
+}
+
+model Minutes {
+  id           String        @id @default(uuid())
+  meetingId    String        @unique
+  content      Json          @default("{}")
+  status       MinutesStatus @default(draft)
+  templateType String        @default("government")
+  approvedById String?
+  approvedAt   DateTime?
+  version      Int           @default(1)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  meeting  Meeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  approvedBy User?  @relation(fields: [approvedById], references: [id])
+}
+
+model ChatSession {
+  id             String  @id @default(uuid())
+  meetingId      String?
+  organizationId String
+  userId         String
+  title          String?
+  contextType    String  @default("meeting")
+  contextId      String?
+  isActive       Boolean @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  meeting      Meeting?      @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  organization Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages     ChatMessage[]
+
+  @@index([userId, isActive])
+}
+
+model ChatMessage {
+  id        String   @id @default(uuid())
+  sessionId String
+  role      String
+  content   String
+  citations Json     @default("[]")
+  metadata  Json     @default("{}")
+  createdAt DateTime @default(now())
+
+  session ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+}
+
+model AuditLog {
+  id             String   @id @default(uuid())
+  action         String
+  actorId        String
+  actorEmail     String
+  organizationId String?
+  resourceId     String?
+  resourceType   String?
+  metadata       Json     @default("{}")
+  ip             String?
+  userAgent      String?
+  timestamp      DateTime @default(now())
+
+  @@index([organizationId, timestamp(sort: Desc)])
+  @@index([action])
+  @@index([actorId])
+}
+
+model ExportLog {
+  id        String   @id @default(uuid())
+  meetingId String
+  userId    String
+  format    String
+  filePath  String?
+  fileSize  BigInt?
+  status    String   @default("processing")
+  createdAt DateTime @default(now())
+
+  meeting Meeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id])
+
+  @@index([meetingId])
+}

@@ -1,0 +1,19 @@
+{
+  "name": "Risalah SEKNEG AI",
+  "short_name": "Risalah",
+  "description": "Meeting Intelligence Platform for Indonesian Government",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0f172a",
+  "orientation": "any",
+  "categories": ["business", "productivity", "government"],
+  "icons": [
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

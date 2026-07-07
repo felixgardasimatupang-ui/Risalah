@@ -1,0 +1,26 @@
+{
+  "name": "Notula Rapat Perusahaan",
+  "description": "Format notula rapat perusahaan swasta",
+  "sections": {
+    "header": {
+      "title": "HEADER",
+      "content": "NOTULA RAPAT\n{{title}}\n{{date}}\nLokasi: {{location}}\n"
+    },
+    "attendees": {
+      "title": "ATTENDEES",
+      "content": "{{participants}}\n"
+    },
+    "discussion": {
+      "title": "DISCUSSION",
+      "content": "{{transcript}}\n"
+    },
+    "decisions": {
+      "title": "DECISIONS",
+      "content": "{{decisions}}\n"
+    },
+    "action_items": {
+      "title": "ACTION ITEMS",
+      "content": "{{action_items}}\n"
+    }
+  }
+}

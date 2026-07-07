@@ -1,0 +1,26 @@
+{
+  "name": "Notula Rapat BUMN/BUMD",
+  "description": "Format notula rapat Badan Usaha Milik Negara/Daerah",
+  "sections": {
+    "header": {
+      "title": "HEADER",
+      "content": "NOTULA RAPAT\n{{title}}\n{{date}}\nLokasi: {{location}}\n"
+    },
+    "peserta": {
+      "title": "PESERTA",
+      "content": "{{participants}}\n"
+    },
+    "agenda_bisnis": {
+      "title": "AGENDA BISNIS",
+      "content": "{{transcript}}\n"
+    },
+    "keputusan_bisnis": {
+      "title": "KEPUTUSAN",
+      "content": "{{decisions}}\n"
+    },
+    "action_plan": {
+      "title": "ACTION PLAN",
+      "content": "{{action_items}}\n"
+    }
+  }
+}

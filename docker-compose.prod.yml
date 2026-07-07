@@ -1,0 +1,126 @@
+services:
+  traefik:
+    image: traefik:v3.1
+    container_name: risalah-traefik
+    command:
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.websecure.address=:443"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
+      - "--certificatesresolvers.letsencrypt.acme.tlschallenge=true"
+      - "--certificatesresolvers.letsencrypt.acme.email=admin@sekneg.go.id"
+      - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - traefik_data:/letsencrypt
+    restart: unless-stopped
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ghcr.io/sekneg/risalah-app:latest
+    container_name: risalah-app
+    expose:
+      - "3000"
+    env_file: .env.production
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.app.rule=Host(`app.risalah.sekneg.go.id`)"
+      - "traefik.http.routers.app.entrypoints=websecure"
+      - "traefik.http.routers.app.tls.certresolver=letsencrypt"
+      - "traefik.http.services.app.loadbalancer.server.port=3000"
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    restart: unless-stopped
+
+  ai-service:
+    build:
+      context: ./services/ai-service
+      dockerfile: Dockerfile.gpu
+    image: ghcr.io/sekneg/risalah-ai:latest
+    container_name: risalah-ai
+    expose:
+      - "8000"
+    env_file: .env.production
+    volumes:
+      - ai_data:/data
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.ai.rule=Host(`ai.risalah.sekneg.go.id`)"
+      - "traefik.http.routers.ai.entrypoints=websecure"
+      - "traefik.http.routers.ai.tls.certresolver=letsencrypt"
+      - "traefik.http.services.ai.loadbalancer.server.port=8000"
+    depends_on:
+      redis:
+        condition: service_started
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: risalah-postgres
+    expose:
+      - "5432"
+    environment:
+      - POSTGRES_USER=risalah
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=risalah
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U risalah"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: risalah-redis
+    expose:
+      - "6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    command: redis-server --appendonly yes --maxmemory 2gb
+
+  minio:
+    image: minio/minio:latest
+    container_name: risalah-minio
+    expose:
+      - "9000"
+    environment:
+      - MINIO_ROOT_USER=risalah
+      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
+    volumes:
+      - minio_data:/data
+    command: server /data
+    restart: unless-stopped
+
+volumes:
+  traefik_data:
+  ai_data:
+  postgres_data:
+  redis_data:
+  minio_data:

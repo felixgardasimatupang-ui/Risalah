@@ -1,0 +1,26 @@
+{
+  "name": "Notula Rapat Kementerian",
+  "description": "Format notula rapat tingkat kementerian",
+  "sections": {
+    "header": {
+      "title": "HEADER",
+      "content": "KEMENTERIAN {{kementrian}}\nNOTULA RAPAT\n{{title}}\n{{date}}\n"
+    },
+    "peserta": {
+      "title": "PESERTA",
+      "content": "{{participants}}\n"
+    },
+    "pembahasan": {
+      "title": "PEMBAHASAN",
+      "content": "{{transcript}}\n"
+    },
+    "hasil": {
+      "title": "HASIL RAPAT",
+      "content": "{{decisions}}\n"
+    },
+    "rencana_tindak": {
+      "title": "RENCANA TINDAK LANJUT",
+      "content": "{{action_items}}\n"
+    }
+  }
+}
