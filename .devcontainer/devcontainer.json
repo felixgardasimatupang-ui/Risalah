@@ -2,6 +2,7 @@
   "name": "Risalah - Opencode",
   "image": "mcr.microsoft.com/devcontainers/universal:2",
   "postCreateCommand": "bash .devcontainer/post-create.sh",
+  "postStartCommand": "bash .devcontainer/post-create.sh",
   "postAttachCommand": "bash .devcontainer/post-create.sh",
   "forwardPorts": [20128],
   "portsAttributes": {
