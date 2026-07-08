@@ -1,24 +1,25 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-interface User {
+export interface AuthUser {
   id: string;
-  name: string;
   email: string;
-  role: string;
+  fullName: string;
+  nip: string | null;
+  position: string | null;
+  avatarUrl: string | null;
+  organization: { id: string; name: string; slug: string } | null;
+  role: string | null;
 }
 
 interface AuthState {
-  user: User | null;
+  user: AuthUser | null;
   isAuthenticated: boolean;
-  mfaEnabled: boolean;
-  mfaSecret: string | null;
-  mfaSetupDate: string | null;
-  login: (email: string, password: string) => Promise<boolean>;
-  register: (data: { name: string; email: string; password: string; position?: string; nip?: string }) => Promise<{ success: boolean; error?: string }>;
-  logout: () => void;
-  enableMfa: (secret: string) => void;
-  disableMfa: () => void;
+  isLoading: boolean;
+  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  register: (data: { fullName: string; email: string; password: string; position?: string; nip?: string }) => Promise<{ success: boolean; error?: string }>;
+  logout: () => Promise<void>;
+  fetchUser: () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -26,46 +27,88 @@ export const useAuthStore = create<AuthState>()(
     (set) => ({
       user: null,
       isAuthenticated: false,
-      mfaEnabled: false,
-      mfaSecret: null,
-      mfaSetupDate: null,
+      isLoading: true,
 
-      login: async (email: string, _password: string) => {
-        await new Promise((r) => setTimeout(r, 800));
-        if (email.includes("sekneg.go.id")) {
-          set({
-            user: { id: "p1", name: "Admin SEKNEG", email, role: "Admin" },
-            isAuthenticated: true,
+      login: async (email, password) => {
+        try {
+          const res = await fetch("/api/auth/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, password }),
           });
-          return true;
+          const json = await res.json();
+          if (!json.success) {
+            return { success: false, error: json.error?.message || "Login gagal" };
+          }
+          set({
+            user: json.data,
+            isAuthenticated: true,
+            isLoading: false,
+          });
+          return { success: true };
+        } catch {
+          return { success: false, error: "Terjadi kesalahan. Coba lagi." };
         }
-        return false;
       },
 
       register: async (data) => {
-        await new Promise((r) => setTimeout(r, 800));
-        if (!data.email.includes("sekneg.go.id")) {
-          return { success: false, error: "Gunakan email @sekneg.go.id" };
+        try {
+          const res = await fetch("/api/auth/register", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data),
+          });
+          const json = await res.json();
+          if (!json.success) {
+            return { success: false, error: json.error?.message || "Registrasi gagal" };
+          }
+          set({
+            user: json.data,
+            isAuthenticated: true,
+            isLoading: false,
+          });
+          return { success: true };
+        } catch {
+          return { success: false, error: "Terjadi kesalahan. Coba lagi." };
         }
-        set({
-          user: { id: "p1", name: data.name, email: data.email, role: "Admin" },
-          isAuthenticated: true,
-        });
-        return { success: true };
       },
 
-      enableMfa: (secret) => {
-        set({ mfaEnabled: true, mfaSecret: secret, mfaSetupDate: new Date().toISOString() });
+      logout: async () => {
+        try {
+          await fetch("/api/auth/logout", { method: "POST" });
+        } catch {
+          // proceed even if API fails
+        }
+        set({ user: null, isAuthenticated: false, isLoading: false });
       },
 
-      disableMfa: () => {
-        set({ mfaEnabled: false, mfaSecret: null, mfaSetupDate: null });
-      },
-
-      logout: () => {
-        set({ user: null, isAuthenticated: false, mfaEnabled: false, mfaSecret: null, mfaSetupDate: null });
+      fetchUser: async () => {
+        try {
+          const res = await fetch("/api/auth/me");
+          if (!res.ok) {
+            set({ user: null, isAuthenticated: false, isLoading: false });
+            return;
+          }
+          const json = await res.json();
+          if (json.success) {
+            set({ user: json.data, isAuthenticated: true, isLoading: false });
+          } else {
+            set({ user: null, isAuthenticated: false, isLoading: false });
+          }
+        } catch {
+          set({ user: null, isAuthenticated: false, isLoading: false });
+        }
       },
     }),
-    { name: "risalah-auth" },
+    {
+      name: "risalah-auth",
+      onRehydrateStorage: () => (state) => {
+        if (state?.isAuthenticated) {
+          state.fetchUser();
+        } else if (state) {
+          state.isLoading = false;
+        }
+      },
+    },
   ),
 );

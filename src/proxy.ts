@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-
-const authCookie = "risalah-auth";
+import { verifyToken } from "@/lib/auth";
 
 const PROTECTED_PATHS = [
   "/overview", "/meetings", "/transcripts", "/summary",
@@ -10,7 +9,7 @@ const PROTECTED_PATHS = [
   "/live-meeting", "/minutes"
 ];
 
-export function proxy(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const isAuthPage = pathname === "/login" || pathname === "/register";
   const isProtectedPage = PROTECTED_PATHS.some(
@@ -21,17 +20,16 @@ export function proxy(request: NextRequest) {
     pathname.startsWith("/api/auth/register") ||
     pathname === "/api/health";
 
-  const stored = request.cookies.get(authCookie);
-  const isAuthenticated = stored?.value
-    ? (() => {
-        try {
-          const parsed = JSON.parse(decodeURIComponent(stored.value));
-          return parsed?.state?.isAuthenticated === true;
-        } catch {
-          return false;
-        }
-      })()
-    : false;
+  let isAuthenticated = false;
+  const tokenCookie = request.cookies.get("token");
+  if (tokenCookie?.value) {
+    try {
+      await verifyToken(tokenCookie.value);
+      isAuthenticated = true;
+    } catch {
+      isAuthenticated = false;
+    }
+  }
 
   if (isProtectedPage && !isAuthenticated) {
     return NextResponse.redirect(new URL("/login", request.url));

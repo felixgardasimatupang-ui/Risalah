@@ -1,6 +1,11 @@
+import "dotenv/config";
 import { PrismaClient } from "../src/generated/prisma/client.js";
+import { PrismaPg } from "@prisma/adapter-pg";
+import pg from "pg";
 
-const prisma = new PrismaClient();
+const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
+const adapter = new PrismaPg(pool);
+const prisma = new PrismaClient({ adapter });
 
 async function main() {
   const org = await prisma.organization.upsert({
@@ -18,11 +23,19 @@ async function main() {
     update: {},
     create: {
       email: "admin@sekneg.go.id",
-      name: "Admin SEKNEG",
-      passwordHash: "$2a$10$dev-hash-placeholder", // ganti setelah register
-      role: "super_admin",
+      fullName: "Admin SEKNEG",
+      passwordHash: "$2b$10$11c1y1nRCpmJG3JOvo/RE.MpLuvf0DMFRwRJBdiKvcxfIRPBkF.pe",
       position: "Administrator",
+    },
+  });
+
+  await prisma.organizationMember.upsert({
+    where: { organizationId_userId: { organizationId: org.id, userId: admin.id } },
+    update: {},
+    create: {
       organizationId: org.id,
+      userId: admin.id,
+      role: "admin",
     },
   });
 

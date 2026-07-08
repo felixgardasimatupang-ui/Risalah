@@ -32,8 +32,9 @@ export async function POST(request: Request) {
     let organization;
     if (organizationName) {
       const slug = organizationName.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+      const domain = email.split("@")[1] ?? "";
       organization = await prisma.organization.create({
-        data: { name: organizationName, slug },
+        data: { name: organizationName, slug, domain },
       });
 
       await prisma.organizationMember.create({

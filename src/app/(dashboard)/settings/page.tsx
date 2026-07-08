@@ -104,7 +104,7 @@ export default function SettingsPage() {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <label className="text-label-sm text-on-surface-variant">Nama Lengkap</label>
-                <Input placeholder="Nama pengguna" defaultValue={user?.name ?? ""} className="bg-surface-container-low" />
+                <Input placeholder="Nama pengguna" defaultValue={user?.fullName ?? ""} className="bg-surface-container-low" />
               </div>
               <div className="space-y-2">
                 <label className="text-label-sm text-on-surface-variant">Email</label>
@@ -422,13 +422,15 @@ export default function SettingsPage() {
 }
 
 function SecurityTab() {
-  const { user, mfaEnabled, mfaSetupDate, enableMfa, disableMfa } = useAuthStore();
-  const [step, setStep] = useState<"idle" | "setup" | "verify" | "enabled">(mfaEnabled ? "enabled" : "idle");
+  const { user } = useAuthStore();
+  const [step, setStep] = useState<"idle" | "setup" | "verify" | "enabled">("idle");
   const [secret, setSecret] = useState("");
   const [uri, setUri] = useState("");
   const [verifyCode, setVerifyCode] = useState("");
   const [verifyError, setVerifyError] = useState("");
   const [showDisableConfirm, setShowDisableConfirm] = useState(false);
+  const [mfaActive, setMfaActive] = useState(false);
+  const [mfaSetupDate, setMfaSetupDate] = useState<string | null>(null);
   const qrUrlRef = useRef("");
 
   const startSetup = () => {
@@ -448,7 +450,8 @@ function SecurityTab() {
     setVerifyError("");
     const valid = await verifyTOTP({ secret, token: verifyCode });
     if (valid) {
-      enableMfa(secret);
+      setMfaActive(true);
+      setMfaSetupDate(new Date().toISOString());
       setStep("enabled");
     } else {
       setVerifyError("Kode verifikasi tidak valid. Coba lagi.");
@@ -456,7 +459,8 @@ function SecurityTab() {
   };
 
   const handleDisable = () => {
-    disableMfa();
+    setMfaActive(false);
+    setMfaSetupDate(null);
     setStep("idle");
     setShowDisableConfirm(false);
     setSecret("");

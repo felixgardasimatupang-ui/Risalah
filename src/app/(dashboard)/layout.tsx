@@ -10,19 +10,22 @@ import { PwaInstallPrompt } from "@/components/pwa-install-prompt";
 import { OnboardingModal } from "@/components/onboarding/onboarding-modal";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const { isAuthenticated, isLoading } = useAuthStore();
   const router = useRouter();
   const hasSeenOnboarding = useOnboardingStore((s) => s.hasSeenOnboarding);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
-    if (!isAuthenticated) {
+  }, []);
+
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
       router.replace("/login");
     }
-  }, [isAuthenticated, router]);
+  }, [isLoading, isAuthenticated, router]);
 
-  if (!isAuthenticated) return null;
+  if (isLoading) return null;
 
   return (
     <div className="flex h-screen overflow-hidden bg-surface">

@@ -41,17 +41,19 @@ export function getTokenFromCookie(request: Request): string | null {
   return tokenCookie ? tokenCookie.slice(6) : null;
 }
 
+const isSecure = process.env.NODE_ENV === "production";
+
 export function setTokenCookie(token: string): string {
-  return `token=${token}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=900`;
+  return `token=${token}; HttpOnly${isSecure ? "; Secure" : ""}; SameSite=Strict; Path=/; Max-Age=900`;
 }
 
 export function setRefreshTokenCookie(token: string): string {
-  return `refresh_token=${token}; HttpOnly; Secure; SameSite=Strict; Path=/api/auth; Max-Age=604800`;
+  return `refresh_token=${token}; HttpOnly${isSecure ? "; Secure" : ""}; SameSite=Strict; Path=/api/auth; Max-Age=604800`;
 }
 
 export function clearAuthCookies(): string[] {
   return [
-    "token=; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=0",
-    "refresh_token=; HttpOnly; Secure; SameSite=Strict; Path=/api/auth; Max-Age=0",
+    `token=; HttpOnly${isSecure ? "; Secure" : ""}; SameSite=Strict; Path=/; Max-Age=0`,
+    `refresh_token=; HttpOnly${isSecure ? "; Secure" : ""}; SameSite=Strict; Path=/api/auth; Max-Age=0`,
   ];
 }

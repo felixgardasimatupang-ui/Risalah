@@ -57,6 +57,7 @@ model Organization {
   id        String   @id @default(uuid())
   name      String
   slug      String   @unique
+  domain    String   @unique
   type      String  @default("other")
   logoUrl   String?
   address   String?
