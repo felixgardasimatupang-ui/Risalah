@@ -1,0 +1,18 @@
+{
+  "name": "Risalah - Opencode",
+  "image": "mcr.microsoft.com/devcontainers/universal:2",
+  "postCreateCommand": "npx -y 9router &",
+  "postAttachCommand": "npx -y 9router &",
+  "forwardPorts": [20128],
+  "portsAttributes": {
+    "20128": {
+      "label": "9router",
+      "onAutoForward": "notify"
+    }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": ["opencodeai.opencode-vscode"]
+    }
+  }
+}
