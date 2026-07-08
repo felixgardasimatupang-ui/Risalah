@@ -2,7 +2,7 @@
 set -e
 
 echo "Installing opencode CLI..."
-npm install -g @opencodeai/opencode
+npm install -g opencode-ai@latest
 
 echo "Adding npm global bin to PATH..."
 echo 'export PATH=$(npm root -g)/.bin:$PATH' >> ~/.bashrc
