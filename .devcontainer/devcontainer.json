@@ -1,8 +1,8 @@
 {
   "name": "Risalah - Opencode",
   "image": "mcr.microsoft.com/devcontainers/universal:2",
-  "postCreateCommand": "npx -y 9router &",
-  "postAttachCommand": "npx -y 9router &",
+  "postCreateCommand": "npm install -g @opencodeai/opencode && npx -y 9router &",
+  "postAttachCommand": "npm install -g @opencodeai/opencode && npx -y 9router &",
   "forwardPorts": [20128],
   "portsAttributes": {
     "20128": {
