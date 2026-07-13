@@ -49,16 +49,10 @@ services:
     deploy:
       resources:
         limits:
-          memory: 16G
-        reservations:
-          memory: 8G
-    # GPU support
-    deploy:
-      resources:
-        limits:
           cpus: '8'
           memory: 16G
         reservations:
+          memory: 8G
           devices:
             - driver: nvidia
               count: 1
