@@ -1,6 +1,9 @@
 import re
 import json
+import logging
 from app.models.schemas import NormalizationRequest, NormalizationResponse
+
+logger = logging.getLogger(__name__)
 
 
 class IndonesianNLPService:
@@ -13,7 +16,7 @@ class IndonesianNLPService:
             import spacy
             self.nlp = spacy.load("id_core_news_sm")
         except Exception as e:
-            print(f"Warning: Could not load spaCy ID model: {e}")
+            logger.warning("Could not load spaCy ID model: %s", e)
 
     def normalize(self, request: NormalizationRequest) -> NormalizationResponse:
         text = request.text

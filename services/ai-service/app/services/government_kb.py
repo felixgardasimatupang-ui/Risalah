@@ -12,11 +12,36 @@ class GovernmentKBService:
         self.institutions = self._load_json("institutions.json", self._default_institutions())
         self.regions = self._load_json("indonesia_regions.json", self._default_regions())
 
-    def _load_json(self, filename: str, default: dict) -> dict:
+    def _load_json(self, filename: str, default: dict | list) -> dict | list:
         path = self.kb_dir / filename
         if path.exists():
             with open(path) as f:
-                return json.load(f)
+                raw = json.load(f)
+            # Pass-through lists (e.g. institutions.json)
+            if isinstance(raw, list):
+                return raw
+            # Normalize flat format → nested by `type` field
+            if raw:
+                first_val = next(iter(raw.values()), {})
+                if isinstance(first_val, dict) and "type" in first_val:
+                    nested = {}
+                    for term, info in raw.items():
+                        cat = info.get("type", "other")
+                        nested.setdefault(cat, {})[term] = info
+                    raw = nested
+            # Merge with defaults (only for dict-of-dicts structures)
+            if isinstance(default, dict) and isinstance(raw, dict):
+                raw_has_dict_vals = any(isinstance(v, dict) for v in raw.values())
+                default_has_dict_vals = any(isinstance(v, dict) for v in default.values())
+                if raw_has_dict_vals and default_has_dict_vals:
+                    merged = {}
+                    for cat, terms in default.items():
+                        merged[cat] = {**terms, **(raw.get(cat, {}) if isinstance(raw, dict) else {})}
+                    for cat, terms in raw.items():
+                        if cat not in merged:
+                            merged[cat] = terms
+                    return merged
+            return raw
         return default
 
     def extract_entities(self, request: GovernmentExtractionRequest) -> GovernmentExtractionResponse:
@@ -57,10 +82,16 @@ class GovernmentKBService:
     def get_glossary(self) -> list[dict]:
         glossary = []
         for category, items in self.terms.items():
+            if not isinstance(items, dict):
+                continue
             for term, info in items.items():
+                if isinstance(info, dict):
+                    definition = info.get("definition") or info.get("full", "")
+                else:
+                    definition = str(info)
                 glossary.append({
                     "term": term,
-                    "definition": info.get("definition", ""),
+                    "definition": definition,
                     "category": category,
                 })
         return glossary

@@ -37,10 +37,11 @@ services:
       - ./services/ai-service:/app
       - ai_data:/data
     environment:
-      - RISALAH_WHISPER_DEVICE=cpu
-      - RISALAH_USE_GPU=false
+      - RISALAH_WHISPER_DEVICE=cuda
+      - RISALAH_USE_GPU=true
       - RISALAH_CELERY_BROKER_URL=redis://redis:6379/0
       - RISALAH_CELERY_RESULT_BACKEND=redis://redis:6379/1
+      - RISALAH_HUGGINGFACE_TOKEN=${HUGGINGFACE_TOKEN:-}
     depends_on:
       redis:
         condition: service_started
@@ -48,9 +49,149 @@ services:
     deploy:
       resources:
         limits:
+          memory: 16G
+        reservations:
+          memory: 8G
+    # GPU support
+    deploy:
+      resources:
+        limits:
+          cpus: '8'
+          memory: 16G
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+  # Celery Workers
+  celery-transcription:
+    build:
+      context: ./services/ai-service
+      dockerfile: Dockerfile
+    image: risalah-ai-service
+    container_name: risalah-celery-transcription
+    command: celery -A app.celery_app worker -Q transcription -c 2 --loglevel=info
+    volumes:
+      - ./services/ai-service:/app
+      - ai_data:/data
+    environment:
+      - RISALAH_WHISPER_DEVICE=cuda
+      - RISALAH_USE_GPU=true
+      - RISALAH_CELERY_BROKER_URL=redis://redis:6379/0
+      - RISALAH_CELERY_RESULT_BACKEND=redis://redis:6379/1
+    depends_on:
+      - redis
+      - ai-service
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
           memory: 8G
         reservations:
-          memory: 4G
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+  celery-diarization:
+    build:
+      context: ./services/ai-service
+      dockerfile: Dockerfile
+    image: risalah-ai-service
+    container_name: risalah-celery-diarization
+    command: celery -A app.celery_app worker -Q diarization -c 1 --loglevel=info
+    volumes:
+      - ./services/ai-service:/app
+      - ai_data:/data
+    environment:
+      - RISALAH_DIARIZATION_DEVICE=cuda
+      - RISALAH_CELERY_BROKER_URL=redis://redis:6379/0
+      - RISALAH_CELERY_RESULT_BACKEND=redis://redis:6379/1
+    depends_on:
+      - redis
+      - ai-service
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 8G
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+  celery-minutes:
+    build:
+      context: ./services/ai-service
+      dockerfile: Dockerfile
+    image: risalah-ai-service
+    container_name: risalah-celery-minutes
+    command: celery -A app.celery_app worker -Q minutes -c 2 --loglevel=info
+    volumes:
+      - ./services/ai-service:/app
+      - ai_data:/data
+    environment:
+      - RISALAH_CELERY_BROKER_URL=redis://redis:6379/0
+      - RISALAH_CELERY_RESULT_BACKEND=redis://redis:6379/1
+    depends_on:
+      - redis
+      - ai-service
+    restart: unless-stopped
+
+  celery-rag:
+    build:
+      context: ./services/ai-service
+      dockerfile: Dockerfile
+    image: risalah-ai-service
+    container_name: risalah-celery-rag
+    command: celery -A app.celery_app worker -Q rag -c 2 --loglevel=info
+    volumes:
+      - ./services/ai-service:/app
+      - ai_data:/data
+    environment:
+      - RISALAH_CELERY_BROKER_URL=redis://redis:6379/0
+      - RISALAH_CELERY_RESULT_BACKEND=redis://redis:6379/1
+    depends_on:
+      - redis
+      - ai-service
+    restart: unless-stopped
+
+  celery-export:
+    build:
+      context: ./services/ai-service
+      dockerfile: Dockerfile
+    image: risalah-ai-service
+    container_name: risalah-celery-export
+    command: celery -A app.celery_app worker -Q export -c 1 --loglevel=info
+    volumes:
+      - ./services/ai-service:/app
+      - ai_data:/data
+    environment:
+      - RISALAH_CELERY_BROKER_URL=redis://redis:6379/0
+      - RISALAH_CELERY_RESULT_BACKEND=redis://redis:6379/1
+    depends_on:
+      - redis
+      - ai-service
+    restart: unless-stopped
+
+  celery-beat:
+    build:
+      context: ./services/ai-service
+      dockerfile: Dockerfile
+    image: risalah-ai-service
+    container_name: risalah-celery-beat
+    command: celery -A app.celery_app beat --loglevel=info
+    volumes:
+      - ./services/ai-service:/app
+      - ai_data:/data
+    environment:
+      - RISALAH_CELERY_BROKER_URL=redis://redis:6379/0
+      - RISALAH_CELERY_RESULT_BACKEND=redis://redis:6379/1
+    depends_on:
+      - redis
+    restart: unless-stopped
 
   postgres:
     image: postgres:16-alpine
@@ -78,7 +219,7 @@ services:
     volumes:
       - redis_data:/data
     restart: unless-stopped
-    command: redis-server --appendonly yes --maxmemory 2gb
+    command: redis-server --appendonly yes --maxmemory 2gb --maxmemory-policy allkeys-lru
 
   minio:
     image: minio/minio:latest

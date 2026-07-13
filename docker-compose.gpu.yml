@@ -1,0 +1,203 @@
+version: "3.8"
+
+# GPU-enabled docker-compose override
+# Usage: docker-compose -f docker-compose.yml -f docker-compose.gpu.yml up -d
+
+services:
+  # Main AI Service with GPU
+  ai-service:
+    build:
+      context: ./services/ai-service
+      dockerfile: Dockerfile.gpu
+    image: risalah-ai-service:gpu
+    container_name: risalah-ai-service-gpu
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./services/ai-service:/app
+      - ai_data:/data
+    environment:
+      - RISALAH_WHISPER_DEVICE=cuda
+      - RISALAH_USE_GPU=true
+      - RISALAH_DIARIZATION_DEVICE=cuda
+      - RISALAH_WHISPER_COMPUTE_TYPE=float16
+      - RISALAH_WHISPER_MODEL_SIZE=large-v3
+      - RISALAH_WHISPERX_ALIGN_MODEL=WAV2VEC2_ASR_BASE_INDONESIAN
+      - RISALAH_WHISPERX_LANGUAGE=id
+      - RISALAH_CELERY_BROKER_URL=redis://redis:6379/0
+      - RISALAH_CELERY_RESULT_BACKEND=redis://redis:6379/1
+      - RISALAH_HUGGINGFACE_TOKEN=${HUGGINGFACE_TOKEN:-}
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+        limits:
+          memory: 16G
+        reservations:
+          memory: 8G
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    depends_on:
+      redis:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+
+  # Celery Workers with GPU
+  celery-transcription:
+    image: risalah-ai-service:gpu
+    container_name: risalah-celery-transcription
+    command: celery -A app.celery_app worker -Q transcription -c 2 --loglevel=info --concurrency=2
+    volumes:
+      - ./services/ai-service:/app
+      - ai_data:/data
+    environment:
+      - RISALAH_WHISPER_DEVICE=cuda
+      - RISALAH_USE_GPU=true
+      - RISALAH_CELERY_BROKER_URL=redis://redis:6379/0
+      - RISALAH_CELERY_RESULT_BACKEND=redis://redis:6379/1
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+        limits:
+          memory: 8G
+    restart: unless-stopped
+    depends_on:
+      - redis
+      - ai-service
+
+  celery-diarization:
+    build:
+      context: ./services/ai-service
+      dockerfile: Dockerfile.gpu
+    image: risalah-ai-service:gpu
+    container_name: risalah-celery-diarization
+    command: celery -A app.celery_app worker -Q diarization -c 1 --loglevel=info
+    volumes:
+      - ./services/ai-service:/app
+      - ai_data:/data
+    environment:
+      - RISALAH_DIARIZATION_DEVICE=cuda
+      - RISALAH_CELERY_BROKER_URL=redis://redis:6379/0
+      - RISALAH_CELERY_RESULT_BACKEND=redis://redis:6379/1
+      - HUGGINGFACE_TOKEN=${HUGGINGFACE_TOKEN:-}
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+        limits:
+          memory: 8G
+    restart: unless-stopped
+    depends_on:
+      - redis
+      - ai-service
+
+  # Non-GPU workers (can share CPU)
+  celery-minutes:
+    build:
+      context: ./services/ai-service
+      dockerfile: Dockerfile.gpu
+    image: risalah-ai-service:gpu
+    container_name: risalah-celery-minutes
+    command: celery -A app.celery_app worker -Q minutes -c 2 --loglevel=info
+    volumes:
+      - ./services/ai-service:/app
+      - ai_data:/data
+    environment:
+      - RISALAH_CELERY_BROKER_URL=redis://redis:6379/0
+      - RISALAH_CELERY_RESULT_BACKEND=redis://redis:6379/1
+    restart: unless-stopped
+    depends_on:
+      - redis
+      - ai-service
+
+  celery-rag:
+    build:
+      context: ./services/ai-service
+      dockerfile: Dockerfile.gpu
+    image: risalah-ai-service:gpu
+    container_name: risalah-celery-rag
+    command: celery -A app.celery_app worker -Q rag -c 2 --loglevel=info
+    volumes:
+      - ./services/ai-service:/app
+      - ai_data:/data
+    environment:
+      - RISALAH_CELERY_BROKER_URL=redis://redis:6379/0
+      - RISALAH_CELERY_RESULT_BACKEND=redis://redis:6379/1
+    restart: unless-stopped
+    depends_on:
+      - redis
+      - ai-service
+
+  celery-export:
+    build:
+      context: ./services/ai-service
+      dockerfile: Dockerfile.gpu
+    image: risalah-ai-service:gpu
+    container_name: risalah-celery-export
+    command: celery -A app.celery_app worker -Q export -c 1 --loglevel=info
+    volumes:
+      - ./services/ai-service:/app
+      - ai_data:/data
+    environment:
+      - RISALAH_CELERY_BROKER_URL=redis://redis:6379/0
+      - RISALAH_CELERY_RESULT_BACKEND=redis://redis:6379/1
+    restart: unless-stopped
+    depends_on:
+      - redis
+      - ai-service
+
+  celery-beat:
+    build:
+      context: ./services/ai-service
+      dockerfile: Dockerfile.gpu
+    image: risalah-ai-service:gpu
+    container_name: risalah-celery-beat
+    command: celery -A app.celery_app beat --loglevel=info --scheduler celery.beat.PersistentScheduler
+    volumes:
+      - ./services/ai-service:/app
+      - ai_data:/data
+    environment:
+      - RISALAH_CELERY_BROKER_URL=redis://redis:6379/0
+      - RISALAH_CELERY_RESULT_BACKEND=redis://redis:6379/1
+    restart: unless-stopped
+    depends_on:
+      - redis
+
+  # NVIDIA GPU monitoring
+  nvidia-monitoring:
+    image: nvidia/dcgm-exporter:3.1.8-1.4.0-ubuntu22.04
+    container_name: nvidia-dcgm-exporter
+    ports:
+      - "9400:9400"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    restart: unless-stopped
+
+volumes:
+  ai_data:
+  postgres_data:
+  redis_data:
+  minio_data:

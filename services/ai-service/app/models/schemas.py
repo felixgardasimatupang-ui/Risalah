@@ -168,3 +168,23 @@ class HealthResponse(BaseModel):
     version: str
     models_loaded: dict[str, bool]
     gpu_available: bool
+
+
+# ──────────────────────────────────────────────
+# DB-mapped schemas (meeting CRUD)
+# ──────────────────────────────────────────────
+
+class Meeting(BaseModel):
+    id: str
+    title: str = ""
+    date: str = ""
+    location: str = ""
+    language: str = "id"
+    template_type: str = "government"
+    status: ProcessingStatus = ProcessingStatus.pending
+    audio_path: str = ""
+    audio_duration_ms: int = 0
+    participant_count: int = 0
+    error_message: Optional[str] = None
+    created_at: str = ""
+    updated_at: str = ""

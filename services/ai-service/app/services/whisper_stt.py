@@ -1,8 +1,11 @@
 import os
 import tempfile
+import logging
 from fastapi import UploadFile
 from app.config import settings
 from app.models.schemas import TranscriptionRequest, TranscriptionResponse, TranscriptLine, ProcessingStatus
+
+logger = logging.getLogger(__name__)
 
 
 class WhisperSTTService:
@@ -22,8 +25,8 @@ class WhisperSTTService:
                 num_workers=2,
             )
         except Exception as e:
-            print(f"Warning: Could not load Whisper model: {e}")
-            print("Will use mock/fallback mode")
+            logger.warning("Could not load Whisper model: %s", e)
+            logger.info("Will use mock/fallback mode")
             self.model = None
 
     async def transcribe(

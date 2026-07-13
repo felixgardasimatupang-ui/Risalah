@@ -1,10 +1,9 @@
 from fastapi import APIRouter, UploadFile, File, Form, BackgroundTasks
 from app.models.schemas import TranscriptionRequest, TranscriptionResponse
-from app.services.whisper_stt import WhisperSTTService
+from app.services.whisperx_stt import whisperx_service
 from app.config import settings
 
 router = APIRouter()
-stt_service = WhisperSTTService()
 
 
 @router.post("/transcribe", response_model=TranscriptionResponse)
@@ -14,7 +13,7 @@ async def transcribe_audio(
     language: str = Form("id"),
     diarize: bool = Form(True),
 ):
-    result = await stt_service.transcribe(
+    result = await whisperx_service.transcribe(
         file=file,
         meeting_id=meeting_id,
         language=language,
@@ -28,7 +27,7 @@ async def transcribe_batch(
     background_tasks: BackgroundTasks,
     request: TranscriptionRequest,
 ):
-    background_tasks.add_task(stt_service.transcribe_batch, request)
+    background_tasks.add_task(whisperx_service.transcribe_batch, request)
     return TranscriptionResponse(
         meeting_id=request.meeting_id,
         status="processing",

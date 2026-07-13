@@ -26,7 +26,7 @@ class ContextExtractorService:
         items = []
         patterns = [
             (r"(?:tolong|harap|mohon|agar|diminta|wajib)\s+(.+?)(?:\.|$)", "instruction"),
-            (r"(?:menugaskan|menunjuk)\s+(.+?)(?:untuk|agar)\s+(.+?)(?:\.|$)", "assignment"),
+            (r"(?:menugaskan|menunjuk|ditugaskan)\s+(.*?)(?:untuk|agar)\s+(.+?)(?:\.|$)", "assignment"),
             (r"(?:akan|langsung)\s+(?:ditindaklanjuti|dilaksanakan|diproses)(?:\.|$)", "follow_up"),
             (r"(?:PIC|penanggung jawab|bertanggung jawab)\s+(.+?)(?:\.|$)", "pic"),
         ]
@@ -81,8 +81,8 @@ class ContextExtractorService:
     def _extract_interruptions(self, text: str) -> list[dict]:
         interruptions = []
         patterns = [
-            r"(?:interupsi|menyela|memotong)\s+(.+?)(?:\.|$)",
-            r"(?:izin|ijin)\s+(?:berbicara|menambahkan|bertanya)\s+(.+?)(?:\.|$)",
+            r"(?:interupsi|menyela|memotong)[,\s]+(.+?)(?:\.|$)",
+            r"(?:izin|ijin)\s+(?:berbicara|menambahkan|bertanya|menyela)[,\s]+(.+?)(?:\.|$)",
         ]
         for pattern in patterns:
             for match in re.finditer(pattern, text, re.IGNORECASE):

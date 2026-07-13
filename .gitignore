@@ -41,3 +41,14 @@ monitoring/prometheus-data/
 # Data
 /data/
 !/data/.gitkeep
+
+# Temp / diagnostic
+opencode_*.txt
+*.log
+.DS_Store
+
+# Tools (cloned third-party repos)
+tools/
+
+# 9router backup (contains API keys)
+.9router-backup/

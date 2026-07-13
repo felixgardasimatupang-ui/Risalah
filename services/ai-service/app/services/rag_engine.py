@@ -1,7 +1,9 @@
 import os
-import uuid
+import logging
 from app.config import settings
 from app.models.schemas import ChatRequest, ChatResponse, Citation, IndexRequest
+
+logger = logging.getLogger(__name__)
 
 
 class RAGEngineService:
@@ -20,7 +22,7 @@ class RAGEngineService:
                 model_kwargs={"device": settings.embedding_device},
             )
         except Exception as e:
-            print(f"Warning: Could not load embedding model: {e}")
+            logger.warning("Could not load embedding model: %s", e)
 
         try:
             from langchain_chroma import Chroma
@@ -31,7 +33,7 @@ class RAGEngineService:
                 persist_directory=settings.vector_db_path,
             )
         except Exception as e:
-            print(f"Warning: Could not initialize vector store: {e}")
+            logger.warning("Could not initialize vector store: %s", e)
 
     async def answer(self, request: ChatRequest) -> ChatResponse:
         citations: list[Citation] = []
@@ -120,7 +122,7 @@ class RAGEngineService:
             from app.services.llm_client import ask_llm
             return await ask_llm(question, context, model_key=model_key)
         except Exception as e:
-            print(f"LLM error, falling back to template: {e}")
+            logger.error("LLM error, falling back to template: %s", e)
             return self._fallback_answer(question)
 
     def _fallback_answer(self, question: str) -> str:
